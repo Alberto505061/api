@@ -1,0 +1,197 @@
+openapi: 3.0.2
+info:
+  title: "Lumi'in API"
+  description: "The official documentation of Lumi'in API"
+  version: "1.0.0"
+  contact:
+    name: David Lin
+    email: "david.lin@etu.emse.fr"
+
+servers:
+- url: 127.0.0.1:1234
+  description: localhost
+- url: http://lumiin.website
+  description: production
+tags:
+- name: Board
+  description: Board API
+- name: Measure
+  description: Measure API
+- name: Sensor
+  description: Sensor API
+- name: SensorType
+  description: SensorType API
+- name: User
+  description: User API
+
+components:
+  securitySchemes:
+    user:
+      description: the standard user authorizations
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    admin:
+      description: the admin authorizations
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+
+paths:
+  /api/boards:
+    post:
+      tags: [Board]
+      summary: Create a new board and all its sensors
+      operationId: createBoard
+      security:
+      - admin: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deveui:
+                  description: The end-node device unique identifier
+                  type: string #hexadecimal string
+                  minLength: 16
+                  maxLength: 16
+                  example: "313135386E377718"
+                usermail:
+                  description: The user (owner) email of the device
+                  type: string
+                  format: email
+                  example: joan19@bartoletti.net
+                address:
+                  description: The address of the device
+                  type: string
+                  example: 879 Avenue de Mimet, 13120 Gardanne
+                sensors:
+                  type: array
+                  items:
+                    description: The list of sensors' labels the user wants to add
+                    type: string
+                  example: ["Particules fines", "Tension", "Vitesse du vent"]
+              required: [deveui, usermail, address, sensors]
+      responses:
+        201:
+          description: Returns an array of objects composed of id_sensor and label of all the newly created sensors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      description: The sensor id (id_sensor in the sensors table)
+                      type: integer
+                    label:
+                      description: The sensor type label
+                      type: string
+                example:
+                - id: 1
+                  label: Particules fines #PM1
+                - id: 2
+                  label: Particules fines #PM2.5
+                - id: 3
+                  label: Particules fines #PM10
+                - id: 4
+                  label: Tension
+                - id: 5
+                  label: Vitesse du vent
+  /api/users/{id}/measures:
+      get:
+        tags: [Measure]
+        summary: Get all user's measures
+        operationId: showMeasureByUser
+        parameters:
+          - in: path
+            name: id
+            schema:
+              type: integer
+            required: true
+            description: numeric ID of the user
+        security:
+        - user: []
+        responses:
+          200:
+            description: Returns an array of measures
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        description: The measure id
+                        type: integer
+                      value:
+                        description: The measure value
+                        type: number
+                      id_sensor:
+                        description: The sensor id of the measure
+                        type: integer
+                      id_board:
+                        description: The board if of the measure
+                        type: integer
+                      id_user:
+                        description: The user id
+                        type: integer
+                      location:
+                        description: The measure location
+                        type: string
+                      label:
+                        description: The sensor type label
+                        type: string
+                      unit:
+                        description: The sensor type unit
+                        type: string
+                      created_at:
+                        description: The measure creation date-time
+                        type: string
+                        format: 'date-time'
+
+                  example:
+                  - id: 121
+                    value: 10.5
+                    id_sensor: 81
+                    id_board: 21
+                    id_user: 6
+                    location: 879 Avenue de Mimet, 13120 Gardanne
+                    label: PM1
+                    unit: µg/m3
+                    created_at: 2019-05-23 09:19:4
+
+                  - id: 125
+                    value: 10.97
+                    id_sensor: 84
+                    id_board: 21
+                    id_user: 6
+                    location: 879 Avenue de Mimet, 13120 Gardanne
+                    label: Tension
+                    unit: V
+                    created_at: 2019-05-23 09:51:30
+
+                  - id: 126
+                    value: 10.4
+                    id_sensor: 82
+                    id_board: 21
+                    id_user: 6
+                    location: 879 Avenue de Mimet, 13120 Gardanne
+                    label: PM2.5
+                    unit: µg/m3
+                    created_at: 2019-05-23 09:51:31
+
+                  - id: 127
+                    value: 10.7
+                    id_sensor: 83
+                    id_board: 21
+                    id_user: 6
+                    location: 879 Avenue de Mimet, 13120 Gardanne
+                    label: PM10
+                    unit: µg/m3
+                    created_at: 2019-05-23 09:51:31
+
